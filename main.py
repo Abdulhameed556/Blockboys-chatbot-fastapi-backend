@@ -34,13 +34,17 @@ llm = ChatOpenAI(
     }
 )
 
-
 # Define prompt and processing pipeline
 output_parser = StrOutputParser()
 chain = ChatPromptTemplate.from_messages([
     ("system", "You are a helpful AI assistant."),
     ("user", "Question: {question}")
 ]) | llm | output_parser
+
+@app.get("/")
+async def root():
+    """Root endpoint to check if the API is running."""
+    return {"message": "FastAPI is running! Use the /chat endpoint to interact."}
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
