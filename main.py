@@ -2,11 +2,10 @@ import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from dotenv import load_dotenv
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from fastapi.middleware.cors import CORSMiddleware
-
 
 # Load environment variables
 load_dotenv()
@@ -22,26 +21,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Set OpenRouter API Key
-api_key = os.getenv("OPENROUTER_API_KEY")
-if not api_key:
-    raise ValueError("Missing OPENROUTER_API_KEY. Please set it in the .env file.")
+# Set Groq API Key
+groq_api_key = os.getenv("GROQ_API_KEY")
+if not groq_api_key:
+    raise ValueError("Missing GROQ_API_KEY. Please set it in the .env file.")
 
 # Define request model
 class ChatRequest(BaseModel):
     question: str
 
-# Initialize LangChain ChatOpenAI
-llm = ChatOpenAI(
-    model="deepseek/deepseek-r1-zero:free",  # Free DeepSeek model on OpenRouter
-    api_key=api_key,
-    base_url="https://openrouter.ai/api/v1",  # Required for OpenRouter
-    model_kwargs={  # Pass extra headers inside model_kwargs
-        "extra_headers": {
-            "HTTP-Referer": "https://yourwebsite.com",  # Change to your site URL
-            "X-Title": "YourAppTitle"
-        }
-    }
+# Initialize LangChain ChatGroq with LLaMA-4 Maverick
+llm = ChatGroq(
+    model="meta-llama/llama-4-maverick-17b-128e-instruct", 
+    groq_api_key=groq_api_key
 )
 
 # Define prompt and processing pipeline
@@ -54,7 +46,7 @@ chain = ChatPromptTemplate.from_messages([
 @app.get("/")
 async def root():
     """Root endpoint to check if the API is running."""
-    return {"message": "FastAPI is running! Use the /chat endpoint to interact."}
+    return {"message": "FastAPI is running with LLaMA-4 Maverick on Groq! Use the /chat endpoint."}
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
